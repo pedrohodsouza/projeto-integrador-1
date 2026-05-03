@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Entrar - CidadeLimpa{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="card">
+        <h2>Acesse sua conta</h2>
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+                <p style="color: #ef4444; margin-bottom: 1rem; text-align: center; font-size: 0.9rem;">
+                    Usuário ou senha incorretos.
+                </p>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="id_username">Usuário</label>
+                <input type="text" name="username" id="id_username" placeholder="Seu usuário" required>
+            </div>
+
+            <div class="form-group">
+                <label for="id_password">Senha</label>
+                <input type="password" name="password" id="id_password" placeholder="Sua senha" required>
+            </div>
+
+            <button type="submit" class="btn-primary btn-full">Entrar</button>
+        </form>
+        
+        <p style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: var(--text-muted);">
+            Apenas administradores e gestores autorizados.
+        </p>
+    </div>
+</div>
+{% endblock %}
