@@ -12,6 +12,10 @@ Este projeto consiste em um **Sistema Web para Registro de Denúncias Anônimas 
 
 A aplicação foi pensada para resolver a falta de organização e formalidade em denúncias de infraestrutura, que frequentemente são feitas de forma dispersa em redes sociais.
 
+## Como Executar Localmente
+
+Consulte o nosso **[Guia de Instalação (INSTALL.md)](INSTALL.md)** para o passo a passo detalhado de como configurar o ambiente (instalação do Git, Python, dependências) e rodar o servidor na sua máquina.
+
 ## Funcionalidades Principais
 
 - **Cadastro de Denúncias:** Interface web simples e acessível para o registro de problemas urbanos.
