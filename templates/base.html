@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Denúncias Urbanas{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">Cidade<span>Limpa</span></a>
+            <ul class="nav-links">
+                {% if user.is_authenticated %}
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/admin/">Painel</a></li>
+                    <li>
+                        <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-link">Sair</button>
+                        </form>
+                    </li>
+                {% else %}
+                    {% if request.resolver_match.url_name != 'login' %}
+                        <li><a href="{% url 'login' %}" class="btn-primary">Entrar</a></li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Projeto Integrador I - UNIVESP</p>
+        </div>
+    </footer>
+</body>
+</html>
