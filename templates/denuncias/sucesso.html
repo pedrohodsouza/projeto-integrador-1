@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Sucesso - CidadeLimpa{% endblock %}
+
+{% block content %}
+<div class="success-container">
+    <div class="card success-card">
+        <div class="success-header">
+            <div class="success-checkmark-wrapper">
+                <span class="success-icon">✅</span>
+            </div>
+            <h2>Ocorrência Registrada!</h2>
+            <p class="success-subtitle">Sua contribuição foi salva com sucesso. Obrigado por nos ajudar a manter a cidade em ordem.</p>
+        </div>
+
+        <div class="success-details-box">
+            <h3>📄 Protocolo de Acompanhamento</h3>
+            <div class="protocol-code">CL-{% now "Y" %}{{ denuncia.criado_em|date:"m" }}-{{ denuncia.pk }}</div>
+
+            <div class="details-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Título da Ocorrência:</span>
+                    <span class="detail-value">{{ denuncia.titulo }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Categoria:</span>
+                    <span class="detail-value">{{ denuncia.get_categoria_display }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Localização:</span>
+                    <span class="detail-value">{{ denuncia.localizacao }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Modo de Envio:</span>
+                    <span class="detail-value">
+                        {% if denuncia.anonimo %}
+                            🔒 Anônimo
+                        {% else %}
+                            👤 Identificado
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Status Inicial:</span>
+                    <span class="detail-value status-badge badge-pendente">⚠️ {{ denuncia.get_status_display }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Data de Registro:</span>
+                    <span class="detail-value">{{ denuncia.criado_em|date:"d/m/Y \à\s H:i" }}</span>
+                </div>
+            </div>
+
+            {% if denuncia.foto %}
+                <div class="success-image-preview">
+                    <p class="preview-label">Evidência Anexada:</p>
+                    <img src="{{ denuncia.foto.url }}" alt="Evidência da denúncia" class="attached-img">
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="success-actions">
+            <a href="{% url 'criar_denuncia' %}" class="btn-primary">Registrar Novo Problema</a>
+            <a href="{% url 'home' %}" class="btn-secondary-outline">Voltar para o Início</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,16 +1,398 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div style="text-align: center; padding: 4rem 0;">
-    <h1>Bem-vindo ao CidadeLimpa</h1>
-    <p style="color: var(--text-muted); margin-top: 1rem; font-size: 1.2rem;">
-        Plataforma colaborativa para registro de problemas urbanos.
-    </p>
-    
-    <div style="margin-top: 3rem;">
-        <a href="#" class="btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600;">
-            Registrar uma Denúncia
-        </a>
-    </div>
+<div class="welcome-section">
+    <h1>Cidade<span>Limpa</span></h1>
 </div>
+
+<!-- BARRA PRINCIPAL DE ÍCONES (Módulos) -->
+<div class="modules-navbar">
+    <button class="module-tab-btn active" data-module="modulo1" id="tab-modulo1">
+        <span class="tab-icon">📝</span>
+        <span class="tab-label">Registro</span>
+    </button>
+    <button class="module-tab-btn" data-module="modulo2" id="tab-modulo2">
+        <span class="tab-icon">🔍</span>
+        <span class="tab-label">Consulta</span>
+        <span class="tab-badge-count">{{ total_denuncias }}</span>
+    </button>
+    <button class="module-tab-btn" data-module="modulo3" id="tab-modulo3">
+        <span class="tab-icon">🛠️</span>
+        <span class="tab-label">Gestão</span>
+    </button>
+    <button class="module-tab-btn" data-module="modulo4" id="tab-modulo4">
+        <span class="tab-icon">📊</span>
+        <span class="tab-label">Indicadores</span>
+        {% if total_denuncias > 0 %}
+            <span class="tab-badge-efficiency">{{ eficiencia }}%</span>
+        {% endif %}
+    </button>
+</div>
+
+<!-- PAINEL CONTEÚDO DOS MÓDULOS (Dinâmico via JS) -->
+<div class="modules-panel-container">
+    
+    <!-- CONTEÚDO MÓDULO 1: REGISTRO -->
+    <div class="module-panel active-panel" id="panel-modulo1">
+        <div class="panel-header">
+            <h3>📝 Registro (Interface do Cidadão)</h3>
+            <p>Selecione uma opção abaixo para prosseguir com o seu relato.</p>
+        </div>
+        
+        <!-- OPÇÕES DO MÓDULO 1 -->
+        <div class="modulo1-options-grid">
+            <button class="option-action-btn" id="btn-show-form">
+                <span class="action-icon">➕</span>
+                <div class="action-text">
+                    <strong>Registrar Nova Ocorrência</strong>
+                    <span>Abra o formulário para cadastrar um problema na sua rua</span>
+                </div>
+            </button>
+            
+            <a href="/admin/" class="option-action-btn">
+                <span class="action-icon">📋</span>
+                <div class="action-text">
+                    <strong>Acompanhar meus Chamados</strong>
+                    <span>Acesse a listagem para verificar andamentos e respostas</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- FORMULÁRIO COLAPSÁVEL DE REGISTRO (Abre ao clicar em "Registrar Nova Ocorrência") -->
+        <div class="collapsible-form-container" id="form-denuncia-collapse" style="display: none;">
+            <div class="card form-card shadow-premium">
+                <div class="form-header-collapse">
+                    <h4>Preencha os dados da Ocorrência</h4>
+                    <p>Suas informações estarão totalmente protegidas e seguras.</p>
+                </div>
+
+                <form method="post" action="{% url 'criar_denuncia' %}" enctype="multipart/form-data" class="custom-form">
+                    {% csrf_token %}
+                    
+                    <!-- Título -->
+                    <div class="form-group">
+                        <label for="id_titulo">Título da Ocorrência</label>
+                        <input type="text" name="titulo" id="id_titulo" class="form-input" placeholder="Ex: Buraco profundo na pista principal" required>
+                    </div>
+
+                    <!-- Categoria -->
+                    <div class="form-group">
+                        <label for="id_categoria">Categoria do Problema</label>
+                        <select name="categoria" id="id_categoria" class="form-select" required>
+                            <option value="" disabled selected>Selecione uma categoria...</option>
+                            <option value="buraco">Buracos em vias públicas</option>
+                            <option value="iluminacao">Falha na iluminação pública</option>
+                            <option value="lixo">Descarte irregular de lixo / entulho</option>
+                            <option value="enchente">Alagamento / Enchente</option>
+                            <option value="outros">Outros problemas urbanos</option>
+                        </select>
+                    </div>
+
+                    <!-- Descrição -->
+                    <div class="form-group">
+                        <label for="id_descricao">Descrição Detalhada</label>
+                        <textarea name="descricao" id="id_descricao" class="form-textarea" placeholder="Descreva detalhadamente o problema urbano observando riscos..." rows="4" required></textarea>
+                    </div>
+
+                    <!-- Endereço Detalhado -->
+                    <div class="address-grid">
+                        <div class="address-row-cep">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="id_cep_home">CEP</label>
+                                <input type="text" name="cep" id="id_cep_home" class="form-input" placeholder="00000-000" maxlength="9" required>
+                            </div>
+                            <button type="button" class="btn-cep-search" id="btn-buscar-cep-home">🔍 Buscar CEP</button>
+                        </div>
+
+                        <div class="address-row-main">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="id_endereco_home">Endereço (Rua/Avenida)</label>
+                                <input type="text" name="endereco" id="id_endereco_home" class="form-input" placeholder="Rua, Avenida, etc." required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="id_numero_home">Número</label>
+                                <input type="text" name="numero" id="id_numero_home" class="form-input" placeholder="Nº">
+                            </div>
+                        </div>
+
+                        <div class="address-row-sub">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="id_bairro_home">Bairro</label>
+                                <input type="text" name="bairro" id="id_bairro_home" class="form-input" placeholder="Bairro" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="id_cidade_home">Cidade</label>
+                                <input type="text" name="cidade" id="id_cidade_home" class="form-input" placeholder="Cidade" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="id_estado_home">UF</label>
+                                <input type="text" name="estado" id="id_estado_home" class="form-input" placeholder="UF" maxlength="2" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Foto / Upload de Evidência -->
+                    <div class="form-group file-group">
+                        <label for="id_foto_home">Fotografia de Evidência</label>
+                        <div class="file-upload-wrapper">
+                            <span class="file-upload-btn">📸 Selecionar Imagem</span>
+                            <span class="file-name-placeholder" id="file-name-text-home">Nenhuma imagem selecionada</span>
+                            <input type="file" name="foto" id="id_foto_home" class="form-file-input" accept="image/*">
+                        </div>
+
+                        <div class="image-preview-container" id="image-preview-box-home" style="display: none;">
+                            <p class="preview-title">Pré-visualização da evidência:</p>
+                            <img id="image-preview-home" src="#" alt="Preview" class="image-preview-el">
+                        </div>
+                    </div>
+
+                    <!-- Anonimato -->
+                    <div class="form-group check-group">
+                        <label class="switch-container">
+                            <input type="checkbox" name="anonimo" id="id_anonimo" class="form-checkbox">
+                            <span class="switch-slider"></span>
+                        </label>
+                        <div class="check-label-wrapper">
+                            <span class="check-title">Denunciar de forma anônima</span>
+                            <span class="check-desc">Se ativado, sua denúncia aparecerá sem o seu nome no feed público do sistema.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-actions-home">
+                        <button type="submit" class="btn-primary btn-full btn-large">Enviar Denúncia</button>
+                        <button type="button" class="btn-secondary-outline btn-full btn-large" id="btn-cancel-form" style="margin-top: 0.5rem;">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTEÚDO MÓDULO 2: CONSULTA -->
+    <div class="module-panel" id="panel-modulo2">
+        <div class="panel-header">
+            <h3>🔍 Consulta (Portal de Transparência)</h3>
+            <p>Monitore o andamento dos serviços urbanos relatados pela comunidade.</p>
+        </div>
+        
+        <div class="empty-state-card">
+            <span class="state-icon">🌐</span>
+            <h4>Portal público em preparação</h4>
+            <p>Atualmente existem <strong>{{ total_denuncias }} denúncia(s)</strong> cadastradas no sistema. Em breve você poderá consultar o feed completo de ocorrências diretamente aqui!</p>
+        </div>
+    </div>
+
+    <!-- CONTEÚDO MÓDULO 3: GESTÃO -->
+    <div class="module-panel" id="panel-modulo3">
+        <div class="panel-header">
+            <h3>🛠️ Gestão (Painel Administrativo)</h3>
+            <p>Área restrita de moderação e triagem para equipes municipais.</p>
+        </div>
+        
+        <div class="management-preview-card">
+            <div class="secure-badge">🛡️ Acesso Seguro</div>
+            <h4>Área Administrativa do Django</h4>
+            <p>Utilize suas credenciais de gestor para moderar denúncias, atualizar o status e publicar respostas aos cidadãos.</p>
+            <div style="margin-top: 1.5rem; text-align: center;">
+                <a href="/admin/" class="btn-primary" style="padding: 0.75rem 2rem; text-decoration: none; display: inline-block;">Ir para o Painel Administrativo</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTEÚDO MÓDULO 4: INDICADORES -->
+    <div class="module-panel" id="panel-modulo4">
+        <div class="panel-header">
+            <h3>📊 Inteligência (Indicadores Municipais)</h3>
+            <p>Painel de Business Intelligence com métricas agregadas de eficiência urbana.</p>
+        </div>
+        
+        <div class="indicators-dashboard-grid">
+            <div class="indicator-stat-card">
+                <span class="stat-num">{{ total_denuncias }}</span>
+                <span class="stat-label">Total de Ocorrências</span>
+            </div>
+            <div class="indicator-stat-card">
+                <span class="stat-num">{{ total_resolvidos }}</span>
+                <span class="stat-label">Casos Resolvidos</span>
+            </div>
+            <div class="indicator-stat-card">
+                <span class="stat-num status-green">{{ eficiencia }}%</span>
+                <span class="stat-label">Índice de Resolução</span>
+            </div>
+        </div>
+
+        {% if ranking %}
+        <div class="dashboard-preview-section" style="margin-top: 2rem;">
+            <div class="preview-card">
+                <h4>🚨 Ranking de Reclamações mais Críticas</h4>
+                <ul class="ranking-list">
+                    {% for item in ranking %}
+                    <li>
+                        <span class="rank-name">
+                            {% if item.nome == "Buracos em vias públicas" %}🔴 
+                            {% elif item.nome == "Falha na iluminação pública" %}🟡 
+                            {% elif item.nome == "Descarte irregular de lixo / entulho" %}🟤 
+                            {% elif item.nome == "Alagamento / Enchente" %}🔵 
+                            {% else %}⚪ {% endif %}
+                            {{ item.nome }}
+                        </span>
+                        <span class="rank-badge">{{ item.qtd }} caso{{ item.qtd|pluralize:"s" }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- SCRIPT DE ABAS E EFEITOS INTERATIVOS -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const tabBtns = document.querySelectorAll(".module-tab-btn");
+        const panels = document.querySelectorAll(".module-panel");
+        
+        tabBtns.forEach(btn => {
+            btn.addEventListener("click", function() {
+                // Remover classes ativas das abas
+                tabBtns.forEach(b => b.classList.remove("active"));
+                // Ocultar todos os painéis
+                panels.forEach(p => p.classList.remove("active-panel"));
+                
+                // Ativar a aba clicada
+                this.classList.add("active");
+                // Exibir o painel correspondente
+                const targetModule = this.getAttribute("data-module");
+                const targetPanel = document.getElementById("panel-" + targetModule);
+                if (targetPanel) {
+                    targetPanel.classList.add("active-panel");
+                }
+            });
+        });
+
+        // Toggle do Formulário de Registro no Módulo 1
+        const btnShowForm = document.getElementById("btn-show-form");
+        const btnCancelForm = document.getElementById("btn-cancel-form");
+        const formCollapse = document.getElementById("form-denuncia-collapse");
+
+        if (btnShowForm && formCollapse) {
+            btnShowForm.addEventListener("click", function() {
+                // Fechar as outras seções do form se houver e abrir esta
+                formCollapse.style.display = "block";
+                // Rolar suavemente para o formulário
+                formCollapse.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        }
+
+        if (btnCancelForm && formCollapse) {
+            btnCancelForm.addEventListener("click", function() {
+                formCollapse.style.display = "none";
+                // Rolar de volta para a barra principal
+                document.querySelector(".modules-navbar").scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+
+        // Preview da Foto no formulário da Homepage
+        const fileInputHome = document.getElementById('id_foto_home');
+        const fileNameTextHome = document.getElementById('file-name-text-home');
+        const previewBoxHome = document.getElementById('image-preview-box-home');
+        const previewImgHome = document.getElementById('image-preview-home');
+
+        if (fileInputHome) {
+            fileInputHome.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    fileNameTextHome.textContent = file.name;
+                    fileNameTextHome.style.color = 'var(--text-color)';
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImgHome.src = e.target.result;
+                        previewBoxHome.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    fileNameTextHome.textContent = 'Nenhuma imagem selecionada';
+                    fileNameTextHome.style.color = 'var(--text-muted)';
+                    previewBoxHome.style.display = 'none';
+                    previewImgHome.src = '#';
+                }
+            });
+        }
+
+        // Integração ViaCEP
+        function setupCepLookup(cepId, btnId, fields) {
+            const cepInput = document.getElementById(cepId);
+            const searchBtn = document.getElementById(btnId);
+
+            if (!cepInput || !searchBtn) return;
+
+            // Máscara de CEP (XXXXX-XXX)
+            cepInput.addEventListener('input', function() {
+                let value = this.value.replace(/\D/g, '');
+                if (value.length > 5) {
+                    value = value.substring(0, 5) + '-' + value.substring(5, 8);
+                }
+                this.value = value;
+            });
+
+            const performSearch = function() {
+                const cep = cepInput.value.replace(/\D/g, '');
+                if (cep.length !== 8) {
+                    alert('Por favor, informe um CEP válido com 8 dígitos.');
+                    return;
+                }
+
+                const originalBtnText = searchBtn.textContent;
+                searchBtn.textContent = '⏳ Buscando...';
+                searchBtn.disabled = true;
+
+                fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.erro) {
+                            alert('CEP não localizado. Por favor, verifique os dígitos ou preencha o endereço manualmente.');
+                        } else {
+                            if (fields.endereco) document.getElementById(fields.endereco).value = data.logradouro || '';
+                            if (fields.bairro) document.getElementById(fields.bairro).value = data.bairro || '';
+                            if (fields.cidade) document.getElementById(fields.cidade).value = data.localidade || '';
+                            if (fields.estado) document.getElementById(fields.estado).value = data.uf || '';
+                            
+                            // Foca no número automaticamente
+                            if (fields.numero) {
+                                document.getElementById(fields.numero).focus();
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar o CEP:', error);
+                        alert('Ocorreu um erro ao conectar com o serviço de CEP. Preencha o endereço manualmente.');
+                    })
+                    .finally(() => {
+                        searchBtn.textContent = originalBtnText;
+                        searchBtn.disabled = false;
+                    });
+            };
+
+            searchBtn.addEventListener('click', performSearch);
+            
+            // Também permitir buscar ao pressionar Enter no campo de CEP
+            cepInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    performSearch();
+                }
+            });
+        }
+
+        // Ativar o CEP Lookup na homepage
+        setupCepLookup('id_cep_home', 'btn-buscar-cep-home', {
+            endereco: 'id_endereco_home',
+            numero: 'id_numero_home',
+            bairro: 'id_bairro_home',
+            cidade: 'id_cidade_home',
+            estado: 'id_estado_home'
+        });
+    });
+</script>
 {% endblock %}
