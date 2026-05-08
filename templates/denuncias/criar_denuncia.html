@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Ocorrência - CidadeLimpa{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="back-link-container">
+        <a href="{% url 'home' %}" class="btn-back">&larr; Voltar para o Início</a>
+    </div>
+
+    <div class="card form-card">
+        <div class="form-header">
+            <span class="header-icon">📝</span>
+            <h2>Registrar Ocorrência</h2>
+            <p>Preencha os dados abaixo com o máximo de detalhes possível. Suas informações estarão seguras.</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="custom-form">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {% for error in form.non_field_errors %}
+                        <p class="error-msg">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Título -->
+            <div class="form-group">
+                <label for="{{ form.titulo.id_for_label }}">{{ form.titulo.label }}</label>
+                {{ form.titulo }}
+                {% if form.titulo.errors %}
+                    <span class="field-error">{{ form.titulo.errors.as_text }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Categoria -->
+            <div class="form-group">
+                <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
+                {{ form.categoria }}
+                {% if form.categoria.errors %}
+                    <span class="field-error">{{ form.categoria.errors.as_text }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Descrição -->
+            <div class="form-group">
+                <label for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }}</label>
+                {{ form.descricao }}
+                {% if form.descricao.errors %}
+                    <span class="field-error">{{ form.descricao.errors.as_text }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Endereço Detalhado -->
+            <div class="address-grid">
+                <div class="address-row-cep">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="id_cep">CEP</label>
+                        {{ form.cep }}
+                    </div>
+                    <button type="button" class="btn-cep-search" id="btn-buscar-cep">🔍 Buscar CEP</button>
+                </div>
+                {% if form.cep.errors %}
+                    <span class="field-error">{{ form.cep.errors.as_text }}</span>
+                {% endif %}
+
+                <div class="address-row-main">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="id_endereco">Endereço (Rua/Avenida)</label>
+                        {{ form.endereco }}
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="id_numero">Número</label>
+                        {{ form.numero }}
+                    </div>
+                </div>
+                {% if form.endereco.errors or form.numero.errors %}
+                    <span class="field-error">
+                        {% if form.endereco.errors %}{{ form.endereco.errors.as_text }}{% endif %}
+                        {% if form.numero.errors %}{{ form.numero.errors.as_text }}{% endif %}
+                    </span>
+                {% endif %}
+
+                <div class="address-row-sub">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="id_bairro">Bairro</label>
+                        {{ form.bairro }}
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="id_cidade">Cidade</label>
+                        {{ form.cidade }}
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="id_estado">UF</label>
+                        {{ form.estado }}
+                    </div>
+                </div>
+                {% if form.bairro.errors or form.cidade.errors or form.estado.errors %}
+                    <span class="field-error">
+                        {% if form.bairro.errors %}{{ form.bairro.errors.as_text }}{% endif %}
+                        {% if form.cidade.errors %}{{ form.cidade.errors.as_text }}{% endif %}
+                        {% if form.estado.errors %}{{ form.estado.errors.as_text }}{% endif %}
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- Foto / Upload de Evidência -->
+            <div class="form-group file-group">
+                <label for="{{ form.foto.id_for_label }}">{{ form.foto.label }}</label>
+                <div class="file-upload-wrapper">
+                    <span class="file-upload-btn">📸 Selecionar Imagem</span>
+                    <span class="file-name-placeholder" id="file-name-text">Nenhuma imagem selecionada</span>
+                    {{ form.foto }}
+                </div>
+                {% if form.foto.errors %}
+                    <span class="field-error">{{ form.foto.errors.as_text }}</span>
+                {% endif %}
+
+                <!-- Preview em tempo real da foto -->
+                <div class="image-preview-container" id="image-preview-box" style="display: none;">
+                    <p class="preview-title">Pré-visualização da evidência:</p>
+                    <img id="image-preview" src="#" alt="Preview da imagem" class="image-preview-el">
+                </div>
+            </div>
+
+            <!-- Anonimato -->
+            <div class="form-group check-group">
+                <label class="switch-container">
+                    {{ form.anonimo }}
+                    <span class="switch-slider"></span>
+                </label>
+                <div class="check-label-wrapper">
+                    <span class="check-title">{{ form.anonimo.label }}</span>
+                    <span class="check-desc">Se ativado, sua denúncia aparecerá sem o seu nome no feed público do sistema. Apenas administradores do portal terão acesso aos seus dados.</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary btn-full btn-large">Enviar Denúncia</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Gerenciador de Upload de arquivos & Preview da Imagem
+    const fileInput = document.getElementById('id_foto');
+    const fileNameText = document.getElementById('file-name-text');
+    const previewBox = document.getElementById('image-preview-box');
+    const previewImg = document.getElementById('image-preview');
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                fileNameText.textContent = file.name;
+                fileNameText.style.color = 'var(--text-color)';
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    previewBox.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                fileNameText.textContent = 'Nenhuma imagem selecionada';
+                fileNameText.style.color = 'var(--text-muted)';
+                previewBox.style.display = 'none';
+                previewImg.src = '#';
+            }
+        });
+    }
+
+    // Integração ViaCEP
+    function setupCepLookup(cepId, btnId, fields) {
+        const cepInput = document.getElementById(cepId);
+        const searchBtn = document.getElementById(btnId);
+
+        if (!cepInput || !searchBtn) return;
+
+        // Máscara de CEP (XXXXX-XXX)
+        cepInput.addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, '');
+            if (value.length > 5) {
+                value = value.substring(0, 5) + '-' + value.substring(5, 8);
+            }
+            this.value = value;
+        });
+
+        const performSearch = function() {
+            const cep = cepInput.value.replace(/\D/g, '');
+            if (cep.length !== 8) {
+                alert('Por favor, informe um CEP válido com 8 dígitos.');
+                return;
+            }
+
+            const originalBtnText = searchBtn.textContent;
+            searchBtn.textContent = '⏳ Buscando...';
+            searchBtn.disabled = true;
+
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.erro) {
+                        alert('CEP não localizado. Por favor, verifique os dígitos ou preencha o endereço manualmente.');
+                    } else {
+                        if (fields.endereco) document.getElementById(fields.endereco).value = data.logradouro || '';
+                        if (fields.bairro) document.getElementById(fields.bairro).value = data.bairro || '';
+                        if (fields.cidade) document.getElementById(fields.cidade).value = data.localidade || '';
+                        if (fields.estado) document.getElementById(fields.estado).value = data.uf || '';
+                        
+                        // Foca no número automaticamente
+                        if (fields.numero) {
+                            document.getElementById(fields.numero).focus();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar o CEP:', error);
+                    alert('Ocorreu um erro ao conectar com o serviço de CEP. Preencha o endereço manualmente.');
+                })
+                .finally(() => {
+                    searchBtn.textContent = originalBtnText;
+                    searchBtn.disabled = false;
+                });
+        };
+
+        searchBtn.addEventListener('click', performSearch);
+        
+        // Também permitir buscar ao pressionar Enter no campo de CEP
+        cepInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performSearch();
+            }
+        });
+    }
+
+    // Ativar o CEP Lookup na página de denúncia
+    setupCepLookup('id_cep', 'btn-buscar-cep', {
+        endereco: 'id_endereco',
+        numero: 'id_numero',
+        bairro: 'id_bairro',
+        cidade: 'id_cidade',
+        estado: 'id_estado'
+    });
+</script>
+{% endblock %}

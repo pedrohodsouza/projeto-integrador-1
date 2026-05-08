@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'denuncias',
 ]
 
 MIDDLEWARE = [
@@ -117,6 +118,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Configuração de arquivos de mídia (imagens das denúncias)
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Configurações de Autenticação
 LOGIN_REDIRECT_URL = 'home'
