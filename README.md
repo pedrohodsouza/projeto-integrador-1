@@ -16,7 +16,7 @@ A aplicação foi pensada para resolver a falta de organização e formalidade e
 
 Consulte o nosso **[Guia de Instalação (INSTALL.md)](INSTALL.md)** para o passo a passo detalhado de como configurar o ambiente (instalação do Git, Python, dependências) e rodar o servidor na sua máquina.
 
-## 🛠️ Área do Desenvolvedor
+## Área do Desenvolvedor
 
 Para os desenvolvedores do projeto, acompanhem o progresso das tarefas e a especificação dos módulos aqui:
 - **[Roteiro de Desenvolvimento (MODULOS.md)](MODULOS.md)**
