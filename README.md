@@ -2,6 +2,7 @@
 
 <p align="center">
   <img src="static/img/logo_principal.png" alt="Logo VozUrbana" height="120">
+  &nbsp;&nbsp;&nbsp;
 </p>
 
 Repositório do App para o Projeto Integrador I - Eixo Computação - UNIVESP.
@@ -52,3 +53,5 @@ Projeto desenvolvido pelos alunos da Universidade Virtual do Estado de São Paul
 
 **Tutor(a):** Jessica Luíza Capeletti Mendonça
 **Ano:** 2026
+
+<img src="univesp-logo.jpg" alt="Logo UNIVESP" height="120">
