@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ denuncia.titulo }} - VozUrbana{% endblock %}
+
+{% block content %}
+<div class="detalhe-container">
+    <div class="back-link-container">
+        <a href="/?status=&categoria=" class="btn-back"><i class="fa-solid fa-arrow-left-long"></i> Voltar para o Feed
+            de Consulta</a>
+    </div>
+
+    <div class="detalhe-header">
+        <h2>{{ denuncia.titulo }}</h2>
+        <div class="detalhe-meta">
+            <span class="card-category">{{ denuncia.get_categoria_display }}</span>
+            <div class="card-date"><img src="{% static 'img/icones/calendar.png' %}" alt="Ícone de calendário"> Relatado
+                em {{
+                denuncia.criado_em|date:"d/m/Y" }} às {{ denuncia.criado_em|time:"H:i" }}</div>
+
+            {% if denuncia.status == 'pendente' %}
+            <span class="status-badge badge-pendente">Status: Pendente</span>
+            {% elif denuncia.status == 'analise' %}
+            <span class="status-badge badge-analise">Status: Em Análise</span>
+            {% elif denuncia.status == 'resolvido' %}
+            <span class="status-badge badge-resolvido">Status: Resolvido</span>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if denuncia.foto %}
+    <div class="detalhe-img-wrapper">
+        <img src="{{ denuncia.foto.url }}" alt="{{ denuncia.titulo }}" class="detalhe-img">
+    </div>
+    {% endif %}
+
+    <div class="detalhe-section">
+        <div class="detalhe-section-content"><img src="{% static 'img/icones/location.png' %}"
+                alt="Ícone de localização">
+            <h3>Localização do Problema</h3>
+        </div>
+        <p>{{ denuncia.localizacao }}</p>
+    </div>
+
+    <div class="detalhe-section">
+        <div class="detalhe-section-content"><img src="{% static 'img/icones/registration-form.png' %}"
+                alt="Ícone de descrição">
+            <h3>Descrição do Relato</h3>
+        </div>
+        <p>{{ denuncia.descricao }}</p>
+
+        {% if denuncia.resposta_gestor %}
+        <div class="resposta-gestor-box">
+            <h4>Reposta da Administração Municipal</h4>
+            <p>{{ denuncia.resposta_gestor }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
