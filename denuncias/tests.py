@@ -118,3 +118,34 @@ class DenunciaViewsTest(TestCase):
         self.assertContains(response, "Ocorrência Registrada!")
         self.assertContains(response, self.denuncia.titulo)
         self.assertContains(response, f"CL-")
+
+    def test_acompanhar_chamado_view_get(self):
+        response = self.client.get(reverse('acompanhar_chamado'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Portal de Transparência & Ocorrências")
+        # Garante que a ocorrência criada no setUp está listada no feed
+        self.assertContains(response, self.denuncia.titulo)
+
+    def test_acompanhar_chamado_view_filter_search(self):
+        # Filtra por texto que existe
+        response = self.client.get(reverse('acompanhar_chamado'), {'busca': 'Lixo'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.denuncia.titulo)
+
+        # Filtra por texto que não existe
+        response = self.client.get(reverse('acompanhar_chamado'), {'busca': 'Inexistente'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Nenhuma ocorrência encontrada")
+
+    def test_acompanhar_chamado_view_redirect_protocol(self):
+        # Protocolo válido deve redirecionar para a página de detalhes
+        protocolo = f"CL-202605-{self.denuncia.pk}"
+        response = self.client.get(reverse('acompanhar_chamado'), {'busca': protocolo})
+        self.assertRedirects(response, reverse('detalhe_chamado', kwargs={'pk': self.denuncia.pk}))
+
+    def test_detalhe_chamado_view(self):
+        response = self.client.get(reverse('detalhe_chamado', kwargs={'pk': self.denuncia.pk}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.denuncia.titulo)
+        self.assertContains(response, "Protocolo: CL-")
+

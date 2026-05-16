@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files (Python compilado)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ambientes Virtuais (Virtual Environments)
+venv/
+env/
+ENV/
+.env
+
+# Banco de dados local (SQLite)
+db.sqlite3
+
+# Arquivos de mídia/uploads enviados por usuários
+media/
+
+# Configurações de Editores / IDEs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Arquivos temporários do Sistema Operacional
+.DS_Store
+Thumbs.db
