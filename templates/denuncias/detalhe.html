@@ -15,8 +15,7 @@
         <div class="detalhe-meta">
             <span class="card-category">{{ denuncia.get_categoria_display }}</span>
             <div class="card-date"><img src="{% static 'img/icones/calendar.png' %}" alt="Ícone de calendário"> Relatado
-                em {{
-                denuncia.criado_em|date:"d/m/Y" }} às {{ denuncia.criado_em|time:"H:i" }}</div>
+                em {{ denuncia.criado_em|date:"d/m/Y" }} às {{ denuncia.criado_em|time:"H:i" }}</div>
 
             {% if denuncia.status == 'pendente' %}
             <span class="status-badge badge-pendente">Status: Pendente</span>
