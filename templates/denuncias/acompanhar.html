@@ -1,0 +1,479 @@
+{% extends 'base.html' %}
+
+{% block title %}Portal de Ocorrências - CidadeLimpa{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilos Premium para o Feed de Ocorrências (Transparência) */
+    .portal-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .portal-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .portal-header h2 {
+        font-size: 2rem;
+        color: var(--secondary-color);
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+
+    .portal-header p {
+        color: var(--text-muted);
+        font-size: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Barra de Filtros Premium */
+    .filters-card {
+        background: var(--white);
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        border: 1px solid #e2e8f0;
+        padding: 1.5rem 2rem;
+        margin-bottom: 2.5rem;
+        width: 100% !important;
+        max-width: 100% !important; /* Sobrescreve o max-width: 450px do .card global */
+    }
+
+    .filters-form {
+        display: grid;
+        grid-template-columns: 2fr 1.2fr 1.2fr auto;
+        gap: 1.25rem;
+        align-items: flex-end;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .filter-group label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .filter-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #cbd5e1;
+        border-radius: var(--border-radius);
+        font-size: 0.95rem;
+        outline: none;
+        background-color: #f8fafc;
+        transition: all 0.3s ease;
+        height: 44px; /* Altura idêntica para todos os inputs e selects */
+    }
+
+    .filter-input:focus {
+        border-color: var(--primary-color);
+        background-color: var(--white);
+        box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.1);
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+        height: 44px; /* Alinhamento vertical perfeito */
+    }
+
+    .btn-filter {
+        padding: 0 1.8rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        height: 44px;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .btn-clear {
+        background-color: #f1f5f9;
+        color: var(--text-color) !important;
+        border: 1px solid #e2e8f0;
+        padding: 0 1.2rem;
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 44px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-clear:hover {
+        background-color: #e2e8f0;
+        transform: translateY(-1px);
+    }
+
+    /* Grid de Cards de Ocorrências */
+    .occurrences-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .occurrence-card {
+        background: var(--white);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        border: 1px solid #e2e8f0;
+        display: flex;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .occurrence-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+        border-color: #cbd5e1;
+    }
+
+    .card-thumbnail-box {
+        width: 180px;
+        min-width: 180px;
+        background-color: #f8fafc;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-right: 1px solid #f1f5f9;
+    }
+
+    .card-thumbnail {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .card-placeholder-icon {
+        font-size: 3.5rem;
+        opacity: 0.7;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .card-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .occurrence-category {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--primary-color);
+        letter-spacing: 0.5px;
+    }
+
+    .occurrence-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--secondary-color);
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+    }
+
+    .occurrence-meta {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .occurrence-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.8rem;
+        border-radius: 9999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: capitalize;
+    }
+
+    /* Cores das Badges de Status */
+    .badge-pendente {
+        background-color: #fffbeb;
+        color: #d97706;
+        border: 1px solid #fde68a;
+    }
+
+    .badge-analise {
+        background-color: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
+    }
+
+    .badge-resolvido {
+        background-color: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+    }
+
+    .card-footer-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid #f1f5f9;
+        padding-top: 1rem;
+        margin-top: 1rem;
+    }
+
+    .btn-details {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        transition: gap 0.2s;
+    }
+
+    .btn-details:hover {
+        color: var(--primary-hover);
+        gap: 0.5rem;
+    }
+
+    .protocol-label {
+        font-family: monospace;
+        font-size: 0.85rem;
+        background-color: #f1f5f9;
+        padding: 0.2rem 0.6rem;
+        border-radius: 4px;
+        color: var(--text-color);
+        font-weight: 600;
+    }
+
+    /* Empty State */
+    .empty-state {
+        background: var(--white);
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border: 1px dashed #cbd5e1;
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        display: inline-block;
+    }
+
+    .empty-state h4 {
+        font-size: 1.3rem;
+        color: var(--secondary-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+    }
+
+    /* Responsividade */
+    @media (max-width: 900px) {
+        .filters-form {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .filter-actions {
+            grid-column: span 2;
+            width: 100%;
+            height: auto;
+        }
+
+        .btn-filter, .btn-clear {
+            flex: 1;
+            height: 44px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .occurrence-card {
+            flex-direction: column;
+        }
+
+        .card-thumbnail-box {
+            width: 100%;
+            height: 180px;
+            border-right: none;
+            border-bottom: 1px solid #f1f5f9;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .filters-form {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-actions {
+            grid-column: span 1;
+            flex-direction: column;
+        }
+        
+        .btn-filter, .btn-clear {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="portal-container">
+    <div class="back-link-container">
+        <a href="{% url 'home' %}" class="btn-back">&larr; Voltar para o Início</a>
+    </div>
+
+    <div class="portal-header">
+        <h2>🔍 Portal de Transparência & Ocorrências</h2>
+        <p>Consulte todos os chamados abertos pela comunidade, acompanhe vistorias e resoluções.</p>
+    </div>
+
+    <!-- PAINEL DE FILTROS -->
+    <div class="card filters-card">
+        <form method="get" action="{% url 'acompanhar_chamado' %}" class="filters-form">
+            
+            <!-- Busca por texto -->
+            <div class="filter-group">
+                <label for="id_busca">Buscar Ocorrência</label>
+                <input type="text" 
+                       name="busca" 
+                       id="id_busca" 
+                       value="{{ busca }}" 
+                       class="filter-input" 
+                       placeholder="Digite título, endereço, CEP ou protocolo...">
+            </div>
+
+            <!-- Filtro Categoria -->
+            <div class="filter-group">
+                <label for="id_categoria_filter">Categoria</label>
+                <select name="categoria" id="id_categoria_filter" class="filter-input" style="cursor: pointer;">
+                    <option value="">Todas as categorias</option>
+                    {% for cat_cod, cat_lbl in categorias %}
+                        <option value="{{ cat_cod }}" {% if cat_cod == categoria_selecionada %}selected{% endif %}>
+                            {{ cat_lbl }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro Status -->
+            <div class="filter-group">
+                <label for="id_status_filter">Status</label>
+                <select name="status" id="id_status_filter" class="filter-input" style="cursor: pointer;">
+                    <option value="">Todos os status</option>
+                    {% for stat_cod, stat_lbl in statuses %}
+                        <option value="{{ stat_cod }}" {% if stat_cod == status_selecionada %}selected{% endif %}>
+                            {{ stat_lbl }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Botões de ação -->
+            <div class="filter-actions">
+                <button type="submit" class="btn-primary btn-filter">Filtrar</button>
+                {% if busca or categoria_selecionada or status_selecionada %}
+                    <a href="{% url 'acompanhar_chamado' %}" class="btn-clear" title="Limpar Filtros">❌ Limpar</a>
+                {% endif %}
+            </div>
+
+        </form>
+    </div>
+
+    <!-- LISTAGEM DE OCORRÊNCIAS -->
+    {% if denuncias %}
+        <div class="occurrences-grid">
+            {% for de in denuncias %}
+                <div class="occurrence-card">
+                    <!-- Thumbnail ou ícone representativo -->
+                    <div class="card-thumbnail-box">
+                        {% if de.foto %}
+                            <img src="{{ de.foto.url }}" alt="Evidência" class="card-thumbnail">
+                        {% else %}
+                            <span class="card-placeholder-icon">
+                                {% if de.categoria == 'buraco' %}🕳️
+                                {% elif de.categoria == 'iluminacao' %}💡
+                                {% elif de.categoria == 'lixo' %}🗑️
+                                {% elif de.categoria == 'enchente' %}🌊
+                                {% else %}🌐{% endif %}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Corpo do Card -->
+                    <div class="card-body">
+                        <div>
+                            <div class="card-top-row">
+                                <span class="occurrence-category">{{ de.get_categoria_display }}</span>
+                                <span class="occurrence-status-badge badge-{{ de.status }}">
+                                    {% if de.status == 'pendente' %}⏳
+                                    {% elif de.status == 'analise' %}🛠️
+                                    {% else %}✅{% endif %}
+                                    {{ de.get_status_display }}
+                                </span>
+                            </div>
+                            
+                            <h3 class="occurrence-title">{{ de.titulo }}</h3>
+                            
+                            <div class="occurrence-meta">
+                                <span class="meta-item">📍 {{ de.localizacao }}</span>
+                                <span class="meta-item">📅 {{ de.criado_em|date:"d/m/Y \à\s H:i" }}</span>
+                            </div>
+                        </div>
+
+                        <div class="card-footer-row">
+                            <span class="protocol-label">CL-{{ de.criado_em|date:"Y" }}{{ de.criado_em|date:"m" }}-{{ de.pk }}</span>
+                            <a href="{% url 'detalhe_chamado' de.pk %}" class="btn-details">
+                                Ver Linha do Tempo & Detalhes &rarr;
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Caso nenhum chamado seja encontrado -->
+        <div class="empty-state">
+            <span class="empty-state-icon">📭</span>
+            <h4>Nenhuma ocorrência encontrada</h4>
+            <p>Não localizamos nenhuma denúncia com os filtros aplicados. Tente buscar por outros termos ou categorias.</p>
+            {% if busca or categoria_selecionada or status_selecionada %}
+                <a href="{% url 'acompanhar_chamado' %}" class="btn-primary" style="text-decoration: none;">Mostrar Todas as Ocorrências</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
