@@ -1,5 +1,9 @@
 # projeto-integrador-1
 
+<p align="center">
+  <img src="static/img/logo_principal.png" alt="Logo VozUrbana" height="120">
+</p>
+
 Repositório do App para o Projeto Integrador I - Eixo Computação - UNIVESP.
 
 ## Sobre o Projeto
