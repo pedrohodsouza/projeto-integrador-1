@@ -1,32 +1,41 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Denúncias Urbanas{% endblock %}</title>
+    <title>{% block title %}Voz Urbana{% endblock %}</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}?v={% now 'U' %}">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'img/icon.icon' %}">
 </head>
+
 <body>
     <nav class="navbar">
         <div class="container">
-            <a href="/" class="logo">Cidade<span>Limpa</span></a>
+            <a href="/" class="logo">
+                <img src="{% static 'img/logo_branca.png' %}" alt="Logo Voz Urbana"
+                    style="height: 60px; margin-right: 10px;">
+            </a>
             <ul class="nav-links">
                 {% if user.is_authenticated %}
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/admin/">Painel</a></li>
-                    <li>
-                        <form action="{% url 'logout' %}" method="post" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn-link">Sair</button>
-                        </form>
-                    </li>
+                <li><a href="/">Home</a></li>
+                <li><a href="/admin/">Painel</a></li>
+                <li>
+                    <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-link">Sair</button>
+                    </form>
+                </li>
                 {% else %}
-                    {% if request.resolver_match.url_name != 'login' %}
-                        <li><a href="{% url 'login' %}" class="btn-primary">Entrar</a></li>
-                    {% endif %}
+                {% if request.resolver_match.url_name != 'login' %}
+                <li><a href="{% url 'login' %}" class="btn-primary">Entrar</a></li>
+                {% endif %}
                 {% endif %}
             </ul>
         </div>
@@ -39,8 +48,9 @@
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2026 Projeto Integrador I - UNIVESP</p>
+            <p class="content-footer">&copy; 2026 Projeto Integrador I - UNIVESP</p>
         </div>
     </footer>
 </body>
+
 </html>

@@ -7,23 +7,23 @@ Este documento serve como o roteiro de desenvolvimento do Sistema de Denúncias 
 ## 🏗️ 1. Módulo de Registro (Interface do Cidadão)
 **Objetivo:** Permitir que qualquer morador registre um problema de forma rápida e intuitiva.
 
-- [ ] **Formulário de Cadastro**: Criar campos para Título, Categoria, Descrição e Localização.
-- [ ] **Seleção de Categoria**: Menu suspenso com opções (Buracos, Lixo, Iluminação, Enchentes, etc.).
-- [ ] **Upload de Evidência**: Campo para envio de 1 fotografia da ocorrência.
-- [ ] **Sistema de Anonimato**: Checkbox "Denunciar anonimamente" que oculta o autor no feed público.
-- [ ] **Validação de Dados**: Garantir que campos obrigatórios não sejam enviados vazios.
-- [ ] **Confirmação de Envio**: Mensagem de sucesso amigável após o salvamento.
+- [x] **Formulário de Cadastro**: Criar campos para Título, Categoria, Descrição e Localização.
+- [x] **Seleção de Categoria**: Menu suspenso com opções (Buracos, Lixo, Iluminação, Enchentes, etc.).
+- [x] **Upload de Evidência**: Campo para envio de 1 fotografia da ocorrência.
+- [x] **Sistema de Anonimato**: Checkbox "Denunciar anonimamente" que oculta o autor no feed público.
+- [x] **Validação de Dados**: Garantir que campos obrigatórios não sejam enviados vazios.
+- [x] **Confirmação de Envio**: Mensagem de sucesso amigável após o salvamento.
 
 ---
 
 ## 🔍 2. Módulo de Consulta (Portal de Transparência)
 **Objetivo:** Exibir as demandas da comunidade de forma organizada para evitar duplicidade.
 
-- [ ] **Feed Cronológico**: Listagem de denúncias da mais recente para a mais antiga.
-- [ ] **Cards de Visualização**: Exibir miniatura da foto, título, categoria e selo de status.
-- [ ] **Filtros de Pesquisa**: Permitir filtrar o feed por Categoria ou por Status (Ex: "Somente Resolvidos").
-- [ ] **Página de Detalhes**: Visualização completa da denúncia, incluindo a descrição e a foto ampliada.
-- [ ] **Identificação de Status**: Cores diferentes para cada estado (Pendente = Amarelo, Resolvido = Verde, etc.).
+- [x] **Feed Cronológico**: Listagem de denúncias da mais recente para a mais antiga.
+- [x] **Cards de Visualização**: Exibir miniatura da foto, título, categoria e selo de status.
+- [x] **Filtros de Pesquisa**: Permitir filtrar o feed por Categoria ou por Status (Ex: "Somente Resolvidos").
+- [x] **Página de Detalhes**: Visualização completa da denúncia, incluindo a descrição e a foto ampliada.
+- [x] **Identificação de Status**: Cores diferentes para cada estado (Pendente = Amarelo, Resolvido = Verde, etc.).
 
 ---
 
