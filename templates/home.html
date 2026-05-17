@@ -128,6 +128,15 @@
                                 <label for="id_estado_home">UF</label>
                                 <input type="text" name="estado" id="id_estado_home" class="form-input" placeholder="UF" maxlength="2" required>
                             </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label for="id_zona_home">Zona / Região</label>
+                                <select name="zona" id="id_zona_home" class="form-select">
+                                    <option value="" selected>-- Não informar --</option>
+                                    {% for code, label in zonas %}
+                                    <option value="{{ code }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -220,6 +229,54 @@
             </div>
         </div>
 
+        <!-- FILTROS DE INDICADORES (apenas zona) -->
+        <div class="indicators-filters" style="margin-top:1rem;">
+            <form id="indicators-filter-form" method="get" action="">
+                <label for="filter-zona">Filtrar por Zona:</label>
+                <select id="filter-zona" name="zona" class="form-select" style="margin-right:0.5rem;">
+                    <option value="">Todas</option>
+                    {% for code, label in zonas %}
+                        <option value="{{ code }}" {% if code == zona_selecionada %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" class="btn-primary">Aplicar Filtro</button>
+                <a href="/" class="btn-secondary-outline" style="margin-left:0.5rem; padding:0.4rem 0.75rem;">Limpar</a>
+            </form>
+        </div>
+
+        <!-- MAPA SIMPLIFICADO POR ZONAS -->
+        <div class="dashboard-preview-section" style="margin-top:1.5rem;">
+            <div class="preview-card">
+                <h4>🗺️ Mapa Simplificado por Zona</h4>
+                <p style="margin-bottom:0.5rem;">Contagem de ocorrências por zona (filtro aplicado acima):</p>
+                <div class="zone-map-grid" style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                    {% for item in zone_counts_list %}
+                    <div class="zone-box" style="flex:1 1 120px; padding:0.75rem; border-radius:8px; background:#fff; box-shadow:var(--shadow-sm);">
+                        <div style="font-weight:700;">{{ item.label }}</div>
+                        <div style="font-size:1.25rem; margin-top:0.5rem;">{{ item.count }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- MAPA INTERATIVO -->
+        <div class="dashboard-preview-section" style="margin-top:1.5rem;">
+            <div class="preview-card">
+                <h4>🗺️ Mapa Interativo</h4>
+                <p style="margin-bottom:0.5rem;">Marcadores para denúncias com localização geográfica.</p>
+                <div id="map" style="width:100%; height:360px; border-radius:8px; overflow:hidden;"></div>
+                <!-- dados geo em JSON -->
+                <script>var denunciasGeo = {{ denuncias_geo|safe }};</script>
+                <div style="margin-top:0.6rem; display:flex; gap:0.6rem; align-items:center;">
+                    <label style="font-size:0.95rem; color:var(--text-muted);">Exibir como:</label>
+                    <button id="btn-map-markers" class="btn-secondary-outline" style="padding:0.35rem 0.6rem;">Marcadores</button>
+                    <button id="btn-map-heat" class="btn-secondary-outline" style="padding:0.35rem 0.6rem;">Mapa de Calor</button>
+                </div>
+            </div>
+        </div>
+
         {% if ranking %}
         <div class="dashboard-preview-section" style="margin-top: 2rem;">
             <div class="preview-card">
@@ -242,22 +299,73 @@
             </div>
         </div>
         {% endif %}
+
+        <!-- GRÁFICOS: Status (Doughnut) e Ranking (Bar) -->
+        <div class="dashboard-preview-section" style="margin-top: 1.5rem;">
+            <div class="preview-card">
+                <h4>📈 Visualização Rápida</h4>
+                <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-start;">
+                    <div style="flex:1 1 260px; min-width:220px;">
+                        <canvas id="chart-status" width="300" height="220"></canvas>
+                    </div>
+                    <div style="flex:2 1 420px; min-width:280px;">
+                        <canvas id="chart-ranking" width="600" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>
 
 <!-- SCRIPT DE ABAS E EFEITOS INTERATIVOS -->
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const tabBtns = document.querySelectorAll(".module-tab-btn");
         const panels = document.querySelectorAll(".module-panel");
+
+        // Garantir estado inicial consistente: apenas o primeiro painel visível
+        (function ensureInitialTabs() {
+            let anyActive = false;
+            panels.forEach(p => { if (p.classList && p.classList.contains('active-panel')) anyActive = true; });
+            if (!anyActive) {
+                // limpar classes e ativar o primeiro
+                panels.forEach(p => p.classList.remove('active-panel'));
+                if (panels[0]) panels[0].classList.add('active-panel');
+            }
+
+            // garantir botão ativo correspondente
+            let anyBtnActive = false;
+            tabBtns.forEach(b => { if (b.classList && b.classList.contains('active')) anyBtnActive = true; });
+            if (!anyBtnActive && tabBtns[0]) tabBtns[0].classList.add('active');
+
+            // Forçar display inline dos painéis para mitigar CSS sobrescrito
+            panels.forEach(p => {
+                if (p.classList && p.classList.contains('active-panel')) {
+                    p.style.display = 'block';
+                } else {
+                    p.style.display = 'none';
+                }
+            });
+            // If there are query params indicating filters or a hash, open the Indicadores tab by default
+            try {
+                const params = new URLSearchParams(window.location.search || '');
+                const indicadoresBtn = document.querySelector('.module-tab-btn[data-module="modulo4"]');
+                const shouldOpen = (params.has('zona') && params.get('zona') !== '') || (window.location.hash && window.location.hash.indexOf('panel-modulo4') !== -1);
+                if (shouldOpen && indicadoresBtn) {
+                    indicadoresBtn.click();
+                }
+            } catch (e) { /* ignore URLSearchParams errors on very old browsers */ }
+        })();
         
         tabBtns.forEach(btn => {
             btn.addEventListener("click", function() {
                 // Remover classes ativas das abas
                 tabBtns.forEach(b => b.classList.remove("active"));
-                // Ocultar todos os painéis
-                panels.forEach(p => p.classList.remove("active-panel"));
+                // Ocultar todos os painéis (classes e style)
+                panels.forEach(p => { p.classList.remove("active-panel"); p.style.display = 'none'; });
                 
                 // Ativar a aba clicada
                 this.classList.add("active");
@@ -266,6 +374,21 @@
                 const targetPanel = document.getElementById("panel-" + targetModule);
                 if (targetPanel) {
                     targetPanel.classList.add("active-panel");
+                    targetPanel.style.display = 'block';
+
+                    // Se o painel contém um mapa Leaflet, force o reajuste do tamanho
+                    // e re-plote os marcadores após breve delay (mapa pode estar oculto inicialmente)
+                    const mapEl = targetPanel.querySelector('#map');
+                    if (mapEl) {
+                        setTimeout(() => {
+                            try {
+                                if (window.leafletDenunciaMap && typeof window.leafletDenunciaMap.invalidateSize === 'function') {
+                                    window.leafletDenunciaMap.invalidateSize();
+                                }
+                                if (window.leafletDenunciaPlotMarkers) window.leafletDenunciaPlotMarkers();
+                            } catch (e) { console.warn('Erro ao reajustar mapa:', e); }
+                        }, 300);
+                    }
                 }
             });
         });
@@ -393,6 +516,177 @@
             cidade: 'id_cidade_home',
             estado: 'id_estado_home'
         });
+
+        // ===== Chart.js: Status Doughnut =====
+        try {
+            const statusCanvas = document.getElementById('chart-status');
+            if (statusCanvas) {
+                const statusChart = new Chart(statusCanvas.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Resolvidos', 'Em Análise', 'Pendentes'],
+                        datasets: [{
+                            data: [{{ total_resolvidos }}, {{ total_analise }}, {{ total_pendentes }}],
+                            backgroundColor: ['#16a34a', '#f59e0b', '#ef4444'],
+                            hoverOffset: 6
+                        }]
+                    },
+                    options: {
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        },
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn('Chart.js status init error', e);
+        }
+
+        // ===== Chart.js: Ranking Bar Chart =====
+        try {
+            const rankingCanvas = document.getElementById('chart-ranking');
+            if (rankingCanvas) {
+                const labels = [
+                    {% for it in ranking %}
+                        "{{ it.nome|escapejs }}",
+                    {% endfor %}
+                ];
+                const dataVals = [
+                    {% for it in ranking %}
+                        {{ it.qtd }},
+                    {% endfor %}
+                ];
+
+                new Chart(rankingCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Ocorrências',
+                            data: dataVals,
+                            backgroundColor: 'rgba(225,29,72,0.85)'
+                        }]
+                    },
+                    options: {
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true }
+                        },
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn('Chart.js ranking init error', e);
+        }
+
+        // ===== Leaflet Map =====
+        (function() {
+            // load Leaflet CSS/JS via CDN (ensure they are present in the page head alternatively)
+            const L_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            const L_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+            const HEAT_JS = 'https://cdn.jsdelivr.net/npm/leaflet.heat/dist/leaflet-heat.js';
+
+            function loadScript(src, cb) {
+                const s = document.createElement('script'); s.src = src; s.async = true; s.onload = cb; document.head.appendChild(s);
+            }
+            function loadCss(href) { const l = document.createElement('link'); l.rel='stylesheet'; l.href=href; document.head.appendChild(l); }
+
+            loadCss(L_CSS);
+            loadScript(L_JS, function() {
+                loadScript(HEAT_JS, function() {
+                    try {
+                        const mapEl = document.getElementById('map');
+                        if (!mapEl) return;
+                        const defaultCenter = [-23.55052, -46.633308]; // São Paulo as fallback
+                        const map = L.map('map').setView(defaultCenter, 11);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+                        let markersLayer = L.layerGroup().addTo(map);
+                        let heatLayer = null;
+
+                        function plotMarkers() {
+                            markersLayer.clearLayers();
+                            if (!denunciasGeo || !denunciasGeo.length) return;
+                            denunciasGeo.forEach(d => {
+                                const m = L.marker([d.lat, d.lng]).addTo(markersLayer);
+
+                                // Build a friendly address line
+                                const addrParts = [];
+                                if (d.endereco) addrParts.push(d.endereco + (d.numero ? (', ' + d.numero) : ''));
+                                if (d.bairro) addrParts.push(d.bairro);
+                                if (d.cidade || d.estado) addrParts.push(((d.cidade||'') + (d.estado ? ('/' + d.estado) : '')));
+                                const addrLine = addrParts.filter(Boolean).join(' - ');
+
+                                // Popup content includes title, category and structured address + CEP
+                                const popupHtml = `
+                                    <div style="max-width:240px;">
+                                        <strong>${d.titulo}</strong><br/>
+                                        <small style="color:#666;">${d.categoria}</small>
+                                        ${addrLine ? `<div style="margin-top:6px;">📍 ${addrLine}</div>` : ''}
+                                        ${d.cep ? `<div style="font-size:0.85rem; color:#666;">CEP: ${d.cep}</div>` : ''}
+                                        <div style="margin-top:6px;"><a href='/acompanhar/${d.pk}/'>Abrir detalhe</a></div>
+                                    </div>`;
+
+                                m.bindPopup(popupHtml);
+                                // Show a small tooltip with street/number on hover
+                                const tooltipText = addrLine || d.localizacao || d.titulo;
+                                if (tooltipText) m.bindTooltip(tooltipText, {direction:'top', offset:[0,-8]});
+                            });
+                            // fit bounds
+                            const group = L.featureGroup(markersLayer.getLayers());
+                            if (group.getLayers().length) map.fitBounds(group.getBounds().pad(0.2));
+                        }
+
+                        function plotHeat() {
+                            if (heatLayer) { heatLayer.remove(); heatLayer = null; }
+                            const points = (denunciasGeo || []).map(d => [d.lat, d.lng, 0.6]);
+                            if (!points.length) return;
+                            heatLayer = L.heatLayer(points, { radius: 25, blur: 18, maxZoom: 17 }).addTo(map);
+                            // fit to points
+                            const latlngs = points.map(p => [p[0], p[1]]);
+                            const bounds = L.latLngBounds(latlngs);
+                            map.fitBounds(bounds.pad(0.2));
+                        }
+
+                        // initial: markers
+                        plotMarkers();
+
+                        // expose utilities so other UI code can trigger map resize/replot
+                        window.leafletDenunciaMap = map;
+                        window.leafletDenunciaPlotMarkers = plotMarkers;
+                        window.leafletDenunciaPlotHeat = plotHeat;
+
+                        // attempt to fix initial render when map is inside a hidden tab
+                        setTimeout(() => { try { map.invalidateSize(); } catch(e){} }, 350);
+
+                        document.getElementById('btn-map-markers').addEventListener('click', function(){ if (heatLayer) { heatLayer.remove(); heatLayer=null; } plotMarkers(); });
+                        document.getElementById('btn-map-heat').addEventListener('click', function(){ plotHeat(); });
+                    } catch (err) { console.error('Leaflet init error', err); }
+                });
+            });
+        })();
+
+        // Intercept filter submit to include panel hash so the indicadores tab stays active after reload
+        try {
+            const filterForm = document.getElementById('indicators-filter-form');
+            if (filterForm) {
+                filterForm.addEventListener('submit', function(e) {
+                    // build target URL and include hash to ensure the indicadores panel is shown after reload
+                    e.preventDefault();
+                    const sel = document.getElementById('filter-zona');
+                    const zona = sel ? sel.value : '';
+                    let url = window.location.pathname;
+                    const params = new URLSearchParams();
+                    if (zona) params.set('zona', zona);
+                    const query = params.toString();
+                    if (query) url += ('?' + query);
+                    url += '#panel-modulo4';
+                    window.location.href = url;
+                });
+            }
+        } catch (e) { /* ignore */ }
     });
 </script>
 {% endblock %}

@@ -1129,3 +1129,13 @@ body {
         flex-direction: column;
     }
 }
+
+/* Map styles */
+#map {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.leaflet-container {
+    font: 14px/1.2 Inter, Helvetica, Arial, sans-serif;
+}

@@ -93,10 +93,22 @@
                         {{ form.cidade }}
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
+                        <label for="id_zona">Zona / Região</label>
+                        {{ form.zona }}
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
                         <label for="id_estado">UF</label>
                         {{ form.estado }}
                     </div>
                 </div>
+                <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:1rem;">
+                    <button type="button" id="btn-localizar-mapa" class="btn-cep-search">📍 Localizar no Mapa</button>
+                    <div id="latlng-feedback" style="font-size:0.9rem; color:var(--text-muted);">Latitude/Longitude: <span id="latlng-text">—</span></div>
+                </div>
+
+                <!-- Hidden latitude/longitude fields populated via geocoding client-side -->
+                {{ form.latitude }}
+                {{ form.longitude }}
                 {% if form.bairro.errors or form.cidade.errors or form.estado.errors %}
                     <span class="field-error">
                         {% if form.bairro.errors %}{{ form.bairro.errors.as_text }}{% endif %}
@@ -244,5 +256,43 @@
         cidade: 'id_cidade',
         estado: 'id_estado'
     });
+
+    // Geocoding simples via Nominatim (OpenStreetMap)
+    const btnLocalizar = document.getElementById('btn-localizar-mapa');
+    const latInput = document.getElementById('id_latitude');
+    const lngInput = document.getElementById('id_longitude');
+    const latlngText = document.getElementById('latlng-text');
+
+    if (btnLocalizar) {
+        btnLocalizar.addEventListener('click', function() {
+            const endereco = document.getElementById('id_endereco').value || '';
+            const numero = document.getElementById('id_numero').value || '';
+            const bairro = document.getElementById('id_bairro').value || '';
+            const cidade = document.getElementById('id_cidade').value || '';
+            const estado = document.getElementById('id_estado').value || '';
+
+            const query = encodeURIComponent(`${endereco} ${numero} ${bairro} ${cidade} ${estado}`.trim());
+            if (!query) { alert('Preencha pelo menos um endereço ou cidade antes de localizar.'); return; }
+
+            btnLocalizar.textContent = '⏳ Localizando...';
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`) 
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.length) {
+                        const item = data[0];
+                        const lat = parseFloat(item.lat);
+                        const lon = parseFloat(item.lon);
+                        if (latInput) latInput.value = lat;
+                        if (lngInput) lngInput.value = lon;
+                        if (latlngText) latlngText.textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+                        alert('Localização preenchida com sucesso. Agora envie a denúncia.');
+                    } else {
+                        alert('Não foi possível localizar o endereço. Tente ajustar o texto.');
+                    }
+                })
+                .catch(err => { console.error(err); alert('Erro ao consultar o serviço de geocoding.'); })
+                .finally(() => { btnLocalizar.textContent = '📍 Localizar no Mapa'; });
+        });
+    }
 </script>
 {% endblock %}

@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+import sys
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,5 +26,17 @@ urlpatterns = [
     path('', include('denuncias.urls')),
 ]
 
-if settings.DEBUG:
+if settings.DEBUG or 'runserver' in sys.argv:
+    # Serve media files
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+    # Determine a static files directory to serve in development.
+    static_root = None
+    if getattr(settings, 'STATIC_ROOT', None):
+        static_root = settings.STATIC_ROOT
+    elif getattr(settings, 'STATICFILES_DIRS', None):
+        # Use the first configured static files dir
+        static_root = settings.STATICFILES_DIRS[0]
+
+    if static_root:
+        urlpatterns += static(settings.STATIC_URL, document_root=str(static_root))
