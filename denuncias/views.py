@@ -204,3 +204,11 @@ def acompanhar_chamado(request):
 def detalhe_chamado(request, pk):
     denuncia = get_object_or_404(Denuncia, pk=pk)
     return render(request, 'denuncias/detalhe.html', {'denuncia': denuncia})
+
+def detalhe_denuncia(request, pk):
+    """Compatibilidade com URLs que usam `detalhe_denuncia`.
+
+    Mantém a mesma lógica de `detalhe_chamado`.
+    """
+    denuncia = get_object_or_404(Denuncia, pk=pk)
+    return render(request, 'denuncias/detalhe.html', {'denuncia': denuncia})
