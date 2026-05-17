@@ -35,6 +35,19 @@ class Denuncia(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
     atualizado_em = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
 
+    ZONAS = [
+        ('norte', 'Norte'),
+        ('sul', 'Sul'),
+        ('leste', 'Leste'),
+        ('oeste', 'Oeste'),
+        ('centro', 'Centro'),
+        ('outra', 'Outra/Não informado'),
+    ]
+
+    zona = models.CharField(max_length=20, choices=ZONAS, default='outra', verbose_name="Zona/Região", blank=True)
+    latitude = models.FloatField(null=True, blank=True, verbose_name="Latitude")
+    longitude = models.FloatField(null=True, blank=True, verbose_name="Longitude")
+
     class Meta:
         ordering = ['-criado_em']
         verbose_name = "Denúncia"

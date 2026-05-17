@@ -1858,3 +1858,25 @@ body {
         align-items: stretch;
     }
 }
+
+/* Map styles */
+#map {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.leaflet-container {
+    font: 14px/1.2 Inter, Helvetica, Arial, sans-serif;
+}
+
+.indicators-filters {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.zone-box {
+    text-align: center;
+    min-width: 100px;
+}

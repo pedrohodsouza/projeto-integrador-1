@@ -4,7 +4,7 @@ from .models import Denuncia
 class DenunciaForm(forms.ModelForm):
     class Meta:
         model = Denuncia
-        fields = ['titulo', 'categoria', 'descricao', 'cep', 'endereco', 'numero', 'bairro', 'cidade', 'estado', 'foto', 'anonimo']
+        fields = ['titulo', 'categoria', 'descricao', 'cep', 'endereco', 'numero', 'bairro', 'cidade', 'estado', 'zona', 'latitude', 'longitude', 'foto', 'anonimo']
         widgets = {
             'titulo': forms.TextInput(attrs={
                 'class': 'form-input',
@@ -50,6 +50,12 @@ class DenunciaForm(forms.ModelForm):
                 'placeholder': 'UF',
                 'maxlength': '2'
             }),
+            'zona': forms.Select(attrs={
+                'class': 'form-select',
+                'id': 'id_zona'
+            }),
+            'latitude': forms.HiddenInput(attrs={'id': 'id_latitude'}),
+            'longitude': forms.HiddenInput(attrs={'id': 'id_longitude'}),
             'foto': forms.FileInput(attrs={
                 'class': 'form-file-input',
                 'id': 'id_foto',
