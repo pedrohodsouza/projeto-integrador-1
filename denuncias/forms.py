@@ -59,3 +59,17 @@ class DenunciaForm(forms.ModelForm):
                 'class': 'form-checkbox'
             })
         }
+
+
+class GestaoForm(forms.ModelForm):
+    class Meta:
+        model = Denuncia
+        fields = ['status', 'resposta_gestor']
+        widgets = {
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'resposta_gestor': forms.Textarea(attrs={
+                'class': 'form-textarea',
+                'rows': 4,
+                'placeholder': 'Escreva uma nota sobre a resolução ou andamento da ocorrência...',
+            }),
+        }

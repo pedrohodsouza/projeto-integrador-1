@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Painel de Gestão — CidadeLimpa{% endblock %}
+
+{% block content %}
+<div class="gestao-container">
+
+    <div class="gestao-header">
+        <a href="/" class="btn-back">← Voltar ao início</a>
+        <h2>🛠️ Painel de Gestão</h2>
+        <p>Gerencie as denúncias, atualize status e publique respostas administrativas.</p>
+    </div>
+
+    <!-- Barra de Stats -->
+    <div class="gestao-stats-bar">
+        <div class="gestao-stat-item">
+            <span class="gestao-stat-num">{{ total }}</span>
+            <span class="gestao-stat-label">Total</span>
+        </div>
+        <div class="gestao-stat-item stat-pendente">
+            <span class="gestao-stat-num">{{ total_pendentes }}</span>
+            <span class="gestao-stat-label">Pendentes</span>
+        </div>
+        <div class="gestao-stat-item stat-analise">
+            <span class="gestao-stat-num">{{ total_analise }}</span>
+            <span class="gestao-stat-label">Em Análise</span>
+        </div>
+        <div class="gestao-stat-item stat-resolvido">
+            <span class="gestao-stat-num">{{ total_resolvidos }}</span>
+            <span class="gestao-stat-label">Resolvidos</span>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <form method="get" class="feed-filters-bar">
+        <input type="text" name="busca" value="{{ busca }}" class="form-input" placeholder="Buscar por título ou descrição...">
+        <select name="status" class="form-select">
+            <option value="">Todos os status</option>
+            {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <select name="categoria" class="form-select">
+            <option value="">Todas as categorias</option>
+            {% for val, label in categorias %}
+                <option value="{{ val }}" {% if categoria_filter == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn-primary">Filtrar</button>
+        {% if status_filter or categoria_filter or busca %}
+            <a href="{% url 'gestao_lista' %}" class="btn-secondary-outline">Limpar</a>
+        {% endif %}
+    </form>
+
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="gestao-alert gestao-alert-success" style="margin-bottom: 1rem;">{{ msg }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Feed de Cards -->
+    {% if denuncias %}
+    <p class="feed-result-count">
+        <span>{{ denuncias|length }}</span> ocorrência(s) encontrada(s)
+    </p>
+
+    <div class="feed-list">
+        {% for d in denuncias %}
+        <div class="feed-card">
+
+            <!-- Cabeçalho: categoria · protocolo · status · data -->
+            <div class="feed-card-meta">
+                <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+                    <span class="feed-cat-badge feed-cat-{{ d.categoria }}">{{ d.get_categoria_display }}</span>
+                    <span class="feed-protocol">#{{ d.pk }}</span>
+                </div>
+                <div class="feed-meta-right">
+                    <span class="status-badge badge-{{ d.status }}">{{ d.get_status_display }}</span>
+                    <span class="feed-date">{{ d.criado_em|timesince }} atrás</span>
+                </div>
+            </div>
+
+            <!-- Foto de Evidência -->
+            {% if d.foto %}
+            <div class="feed-photo">
+                <img src="{{ d.foto.url }}" alt="Evidência da denúncia #{{ d.pk }}">
+            </div>
+            {% endif %}
+
+            <!-- Corpo -->
+            <div class="feed-body">
+                <h4 class="feed-title">{{ d.titulo }}</h4>
+                <p class="feed-desc">{{ d.descricao }}</p>
+                <div class="feed-footer">
+                    <span class="feed-location">📍 {{ d.localizacao }}</span>
+                    {% if d.anonimo %}
+                    <span class="feed-anon">🔒 Anônimo</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Resposta Administrativa (quando existir) -->
+            {% if d.resposta_gestor %}
+            <div class="feed-official-reply">
+                <div class="feed-reply-header">
+                    <span class="feed-reply-badge">🏛️ Resposta da Administração</span>
+                    <span class="status-badge badge-{{ d.status }}">{{ d.get_status_display }}</span>
+                </div>
+                <p class="feed-reply-text">{{ d.resposta_gestor }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Ação: gerenciar -->
+            <div class="feed-card-actions">
+                {% if not d.resposta_gestor %}
+                <span class="feed-action-hint">Sem resposta ainda</span>
+                {% else %}
+                <span class="feed-action-hint">Respondido</span>
+                {% endif %}
+                <a href="{% url 'gestao_detalhe' d.pk %}" class="btn-acao btn-ver">Gerenciar →</a>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty-state-card">
+        <span class="state-icon">📭</span>
+        <h4>Nenhuma denúncia encontrada</h4>
+        <p>Não há registros que correspondam aos filtros aplicados.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

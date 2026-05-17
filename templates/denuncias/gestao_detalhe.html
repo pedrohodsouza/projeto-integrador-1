@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestão — Denúncia #{{ denuncia.pk }} — CidadeLimpa{% endblock %}
+
+{% block content %}
+<div class="gestao-container">
+
+    <div class="back-link-container">
+        <a href="{% url 'gestao_lista' %}" class="btn-back">← Voltar à lista de gestão</a>
+    </div>
+
+    <div class="gestao-detalhe-grid">
+
+        <!-- Dados da Denúncia (somente leitura) -->
+        <div class="gestao-denuncia-card">
+            <div class="gestao-card-header">
+                <h3>Denúncia #{{ denuncia.pk }}</h3>
+                <span class="status-badge badge-{{ denuncia.status }}">{{ denuncia.get_status_display }}</span>
+            </div>
+
+            <div class="gestao-info-grid">
+                <div class="info-row">
+                    <span class="info-label">Título</span>
+                    <span class="info-value">{{ denuncia.titulo }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Categoria</span>
+                    <span class="info-value">{{ denuncia.get_categoria_display }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Localização</span>
+                    <span class="info-value">{{ denuncia.localizacao }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Modo de envio</span>
+                    <span class="info-value">{% if denuncia.anonimo %}Anônimo{% else %}Identificado{% endif %}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Recebido em</span>
+                    <span class="info-value">{{ denuncia.criado_em|date:"d/m/Y \à\s H:i" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Última atualização</span>
+                    <span class="info-value">{{ denuncia.atualizado_em|date:"d/m/Y \à\s H:i" }}</span>
+                </div>
+            </div>
+
+            <div class="gestao-descricao">
+                <span class="info-label">Descrição do problema</span>
+                <p>{{ denuncia.descricao }}</p>
+            </div>
+
+            {% if denuncia.resposta_gestor %}
+            <div class="gestao-descricao" style="margin-top: 1rem;">
+                <span class="info-label">Resposta administrativa atual</span>
+                <p>{{ denuncia.resposta_gestor }}</p>
+            </div>
+            {% endif %}
+
+            {% if denuncia.foto %}
+            <div class="gestao-foto">
+                <span class="info-label">Fotografia de evidência</span>
+                <img src="{{ denuncia.foto.url }}" alt="Evidência da denúncia" class="gestao-img-preview">
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Painel de Ações Administrativas -->
+        <div class="gestao-action-card">
+            <h4>Ações Administrativas</h4>
+
+            {% if messages %}
+                {% for msg in messages %}
+                    <div class="gestao-alert gestao-alert-success">{{ msg }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Fluxo de Status + Resposta -->
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="{{ form.status.id_for_label }}">Status da Ocorrência</label>
+                    {{ form.status }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.resposta_gestor.id_for_label }}">Resposta Administrativa</label>
+                    {{ form.resposta_gestor }}
+                    <small class="form-hint">Esta nota ficará vinculada à denúncia como posição oficial da gestão.</small>
+                </div>
+                <button type="submit" class="btn-primary btn-full">Salvar Alterações</button>
+            </form>
+
+            <!-- Moderação: Exclusão -->
+            <div class="gestao-danger-zone">
+                <h5>Moderação de Conteúdo</h5>
+                <p>A exclusão é permanente e não pode ser desfeita. Use apenas em casos de conteúdo impróprio ou duplicidade.</p>
+                <form method="post" action="{% url 'gestao_excluir' denuncia.pk %}" onsubmit="return confirm('Tem certeza que deseja excluir a denúncia #{{ denuncia.pk }}? Esta ação é irreversível.');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-danger btn-full">Excluir Denúncia</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
