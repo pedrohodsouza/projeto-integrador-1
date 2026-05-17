@@ -25,7 +25,9 @@
             <ul class="nav-links">
                 {% if user.is_authenticated %}
                 <li><a href="/">Home</a></li>
-                <li><a href="/admin/">Painel</a></li>
+                {% if user.is_staff %}
+                <li><a href="{% url 'gestao_lista' %}">Gestão</a></li>
+                {% endif %}
                 <li>
                     <form action="{% url 'logout' %}" method="post" style="display: inline;">
                         {% csrf_token %}

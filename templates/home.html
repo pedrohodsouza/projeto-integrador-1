@@ -282,17 +282,124 @@
             <p>Área restrita de moderação e triagem para equipes municipais.</p>
         </div>
 
-        <div class="management-preview-card">
-            <div class="secure-badge">🛡️ Acesso Seguro</div>
-            <h4>Área Administrativa do Django</h4>
-            <p>Utilize suas credenciais de gestor para moderar denúncias, atualizar o status e publicar respostas aos
-                cidadãos.</p>
-            <div style="margin-top: 1.5rem; text-align: center;">
-                <a href="/admin/" class="btn-primary"
-                    style="padding: 0.75rem 2rem; text-decoration: none; display: inline-block;">Ir para o Painel
-                    Administrativo</a>
+        {% if user.is_staff %}
+
+        <!-- Stats -->
+        <div class="gestao-stats-bar" style="margin-bottom: 1.5rem;">
+            <div class="gestao-stat-item">
+                <span class="gestao-stat-num">{{ total_denuncias }}</span>
+                <span class="gestao-stat-label">Total</span>
+            </div>
+            <div class="gestao-stat-item stat-pendente">
+                <span class="gestao-stat-num">{{ total_pendentes }}</span>
+                <span class="gestao-stat-label">Pendentes</span>
+            </div>
+            <div class="gestao-stat-item stat-analise">
+                <span class="gestao-stat-num">{{ total_analise }}</span>
+                <span class="gestao-stat-label">Em Análise</span>
+            </div>
+            <div class="gestao-stat-item stat-resolvido">
+                <span class="gestao-stat-num">{{ total_resolvidos }}</span>
+                <span class="gestao-stat-label">Resolvidos</span>
             </div>
         </div>
+
+        <!-- Filtros client-side -->
+        <div class="feed-filters-bar">
+            <input type="text" id="g-busca" class="form-input" placeholder="Buscar por título ou descrição...">
+            <select id="g-status" class="form-select">
+                <option value="">Todos os status</option>
+                <option value="pendente">Pendente</option>
+                <option value="analise">Em Análise</option>
+                <option value="resolvido">Resolvido</option>
+            </select>
+            <select id="g-categoria" class="form-select">
+                <option value="">Todas as categorias</option>
+                <option value="buraco">Buracos em vias públicas</option>
+                <option value="iluminacao">Falha na iluminação pública</option>
+                <option value="lixo">Descarte irregular de lixo</option>
+                <option value="enchente">Alagamento / Enchente</option>
+                <option value="outros">Outros problemas urbanos</option>
+            </select>
+        </div>
+        <p class="feed-result-count"><span id="g-count">{{ denuncias|length }}</span> ocorrência(s)</p>
+
+        {% if denuncias %}
+        <div class="feed-list" id="g-feed">
+            {% for d in denuncias %}
+            <div class="feed-card"
+                 data-status="{{ d.status }}"
+                 data-categoria="{{ d.categoria }}"
+                 data-busca="{{ d.titulo|lower }} {{ d.descricao|lower }}">
+
+                <div class="feed-card-meta">
+                    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+                        <span class="feed-cat-badge feed-cat-{{ d.categoria }}">{{ d.get_categoria_display }}</span>
+                        <span class="feed-protocol">#{{ d.pk }}</span>
+                    </div>
+                    <div class="feed-meta-right">
+                        <span class="status-badge badge-{{ d.status }}">{{ d.get_status_display }}</span>
+                        <span class="feed-date">{{ d.criado_em|timesince }} atrás</span>
+                    </div>
+                </div>
+
+                {% if d.foto %}
+                <div class="feed-photo">
+                    <img src="{{ d.foto.url }}" alt="Evidência #{{ d.pk }}">
+                </div>
+                {% endif %}
+
+                <div class="feed-body">
+                    <h4 class="feed-title">{{ d.titulo }}</h4>
+                    <p class="feed-desc">{{ d.descricao }}</p>
+                    <div class="feed-footer">
+                        <span class="feed-location">📍 {{ d.localizacao }}</span>
+                        {% if d.anonimo %}<span class="feed-anon">🔒 Anônimo</span>{% endif %}
+                    </div>
+                </div>
+
+                {% if d.resposta_gestor %}
+                <div class="feed-official-reply">
+                    <div class="feed-reply-header">
+                        <span class="feed-reply-badge">🏛️ Resposta da Administração</span>
+                        <span class="status-badge badge-{{ d.status }}">{{ d.get_status_display }}</span>
+                    </div>
+                    <p class="feed-reply-text">{{ d.resposta_gestor }}</p>
+                </div>
+                {% endif %}
+
+                <div class="feed-card-actions">
+                    <span class="feed-action-hint">{% if d.resposta_gestor %}Respondido{% else %}Sem resposta ainda{% endif %}</span>
+                    <a href="{% url 'gestao_detalhe' d.pk %}" class="btn-acao btn-ver">Gerenciar →</a>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+        <div class="feed-empty-filter" id="g-empty" style="display:none;">
+            <span class="state-icon">🔎</span>
+            <h4>Nenhuma denúncia encontrada</h4>
+            <p>Tente ajustar os filtros.</p>
+        </div>
+        {% else %}
+        <div class="empty-state-card">
+            <span class="state-icon">📭</span>
+            <h4>Nenhuma denúncia registrada ainda</h4>
+            <p>Quando cidadãos enviarem ocorrências, elas aparecerão aqui para gestão.</p>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="management-preview-card">
+            <div class="secure-badge">🛡️ Acesso Seguro</div>
+            <h4>Área Restrita</h4>
+            <p>Esta área é exclusiva para gestores municipais. Realize o login com suas credenciais para acessar o painel de moderação.</p>
+            <div style="margin-top: 1.5rem; text-align: center;">
+                <a href="{% url 'login' %}?next={% url 'gestao_lista' %}" class="btn-primary"
+                    style="padding: 0.75rem 2rem; text-decoration: none; display: inline-block;">Entrar como Gestor</a>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <!-- CONTEÚDO MÓDULO 4: INDICADORES -->
@@ -501,6 +608,34 @@
             cidade: 'id_cidade_home',
             estado: 'id_estado_home'
         });
+
+        // Filtros do Feed de Gestão (Módulo 3)
+        function filtrarGestao() {
+            const status    = document.getElementById('g-status')?.value || '';
+            const categoria = document.getElementById('g-categoria')?.value || '';
+            const busca     = (document.getElementById('g-busca')?.value || '').toLowerCase().trim();
+            const cards     = document.querySelectorAll('#g-feed .feed-card');
+            let visiveis    = 0;
+
+            cards.forEach(card => {
+                const ok = (!status    || card.dataset.status    === status)
+                        && (!categoria || card.dataset.categoria === categoria)
+                        && (!busca     || card.dataset.busca.includes(busca));
+                card.style.display = ok ? '' : 'none';
+                if (ok) visiveis++;
+            });
+
+            const countEl = document.getElementById('g-count');
+            if (countEl) countEl.textContent = visiveis;
+
+            const empty = document.getElementById('g-empty');
+            if (empty) empty.style.display = (visiveis === 0 && cards.length > 0) ? 'block' : 'none';
+        }
+
+        ['g-status', 'g-categoria'].forEach(id => {
+            document.getElementById(id)?.addEventListener('change', filtrarGestao);
+        });
+        document.getElementById('g-busca')?.addEventListener('input', filtrarGestao);
     });
 </script>
 {% endblock %}
