@@ -549,21 +549,26 @@
 
         tabBtns.forEach(btn => {
             btn.addEventListener("click", function () {
-                // Remover classes ativas das abas
                 tabBtns.forEach(b => b.classList.remove("active"));
-                // Ocultar todos os painéis
                 panels.forEach(p => p.classList.remove("active-panel"));
 
-                // Ativar a aba clicada
                 this.classList.add("active");
-                // Exibir o painel correspondente
                 const targetModule = this.getAttribute("data-module");
                 const targetPanel = document.getElementById("panel-" + targetModule);
                 if (targetPanel) {
                     targetPanel.classList.add("active-panel");
                 }
+
+                if (targetModule === "modulo4") {
+                    initOrRefreshMap();
+                }
             });
         });
+
+        // Se a página já abriu na aba de Indicadores (ex: ?zona=), inicializa o mapa imediatamente
+        if (document.getElementById("panel-modulo4").classList.contains("active-panel")) {
+            initOrRefreshMap();
+        }
 
         // Toggle do Formulário de Registro no Módulo 1
         const btnShowForm = document.getElementById("btn-show-form");
@@ -717,23 +722,37 @@
         });
         document.getElementById('g-busca')?.addEventListener('input', filtrarGestao);
 
-        // Inicializar Leaflet map
-        try {
-            var mapEl = document.getElementById('map');
-            if (mapEl && typeof denunciasGeo !== 'undefined') {
-                var map = L.map('map').setView([-23.55, -46.63], 11);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors'
-                }).addTo(map);
-                denunciasGeo.forEach(function(d) {
-                    if (d.lat && d.lng) {
-                        L.marker([d.lat, d.lng])
-                            .addTo(map)
-                            .bindPopup('<strong>' + d.titulo + '</strong><br>' + d.localizacao);
+        // Mapa Leaflet — inicialização lazy para evitar bug em painel oculto
+        var leafletMap = null;
+        function initOrRefreshMap() {
+            try {
+                if (!leafletMap) {
+                    leafletMap = L.map('map').setView([-23.55, -46.63], 11);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(leafletMap);
+
+                    if (typeof denunciasGeo !== 'undefined' && denunciasGeo.length > 0) {
+                        var bounds = [];
+                        denunciasGeo.forEach(function(d) {
+                            if (d.lat && d.lng) {
+                                var marker = L.marker([d.lat, d.lng]).addTo(leafletMap);
+                                marker.bindPopup(
+                                    '<strong>' + d.titulo + '</strong>' +
+                                    '<br><small>' + d.localizacao + '</small>'
+                                );
+                                bounds.push([d.lat, d.lng]);
+                            }
+                        });
+                        if (bounds.length > 0) {
+                            leafletMap.fitBounds(bounds, { padding: [40, 40] });
+                        }
                     }
-                });
-            }
-        } catch(e) { console.warn('Leaflet init error', e); }
+                }
+                // Corrige tamanho após painel se tornar visível
+                setTimeout(function() { leafletMap.invalidateSize(); }, 150);
+            } catch(e) { console.warn('Leaflet init error', e); }
+        }
 
         // Inicializar Chart.js
         try {
