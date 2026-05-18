@@ -6,6 +6,24 @@ from django.http import HttpResponseForbidden
 from .models import Denuncia
 from .forms import DenunciaForm, GestaoForm
 import json
+import urllib.request
+import urllib.parse
+
+def _geocode(endereco, numero, bairro, cidade, estado, cep):
+    parts = [p for p in [endereco, numero, bairro, cidade, estado, cep] if p]
+    if not parts:
+        return None, None
+    query = urllib.parse.urlencode({'q': ', '.join(parts), 'format': 'json', 'limit': 1})
+    url = f'https://nominatim.openstreetmap.org/search?{query}'
+    req = urllib.request.Request(url, headers={'User-Agent': 'VozUrbana/1.0 (projeto-integrador)'})
+    try:
+        with urllib.request.urlopen(req, timeout=5) as r:
+            data = json.loads(r.read())
+            if data:
+                return float(data[0]['lat']), float(data[0]['lon'])
+    except Exception:
+        pass
+    return None, None
 
 def home(request):
     zona_sel = request.GET.get('zona', '').strip()
@@ -105,7 +123,16 @@ def criar_denuncia(request):
     if request.method == 'POST':
         form = DenunciaForm(request.POST, request.FILES)
         if form.is_valid():
-            denuncia = form.save()
+            denuncia = form.save(commit=False)
+            if not denuncia.latitude or not denuncia.longitude:
+                lat, lng = _geocode(
+                    denuncia.endereco, denuncia.numero, denuncia.bairro,
+                    denuncia.cidade, denuncia.estado, denuncia.cep
+                )
+                if lat and lng:
+                    denuncia.latitude = lat
+                    denuncia.longitude = lng
+            denuncia.save()
             return redirect('sucesso_denuncia', pk=denuncia.pk)
     else:
         form = DenunciaForm()
