@@ -150,6 +150,19 @@
                         </div>
                     </div>
 
+                    <!-- Zona / Região -->
+                    <div class="form-group">
+                        <label for="id_zona_home">Zona / Região</label>
+                        <select name="zona" id="id_zona_home" class="form-select">
+                            <option value="outra">Selecione a zona...</option>
+                            {% for code, label in zonas %}
+                                <option value="{{ code }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <input type="hidden" name="latitude" id="id_latitude_home">
+                    <input type="hidden" name="longitude" id="id_longitude_home">
+
                     <!-- Foto / Upload de Evidência -->
                     <div class="form-group file-group">
                         <label for="id_foto_home">Fotografia de Evidência</label>
